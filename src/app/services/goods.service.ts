@@ -11,16 +11,28 @@ export class GoodsService {
 
   constructor(private http:HttpClient) { }
 
-  private addToDatabase(item:Good){
-    this.http.post("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods.json",item).subscribe(()=>{});
-  } 
+   
 
   public addGood(item:Good){
     this.goods.push(item);
-    this.addToDatabase(item);
+    return this.http.post("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods.json",item);
   }
 
   public loadData(){
     return this.http.get<{[key:string]:Good}>("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods.json");
+  }
+
+  public loadRecord(id:String){
+    return this.http.get<Good>("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods/"+id+".json");
+  }
+  
+
+  public updateRecord(item:Good ){
+    return this.http.patch("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods/"+item.id+".json", item);
+
+  }
+
+  public deleteRecord(id:string){
+    return this.http.delete("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods/"+id+".json"); 
   }
 }
