@@ -3,16 +3,20 @@ import { GoodsService } from '../../services/goods.service';
 import { Good } from '../../models/good';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { LoadingComponent } from '../loading/loading.component';
 
 @Component({
   selector: 'app-list-of-goods',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LoadingComponent],
   templateUrl: './list-of-goods.component.html',
   styleUrl: './list-of-goods.component.css'
 })
 export class ListOfGoodsComponent {
   public goods:Good[]=[];
+
+  public isLoading=false;
+  public isError=false;
   
   
   
@@ -24,20 +28,55 @@ export class ListOfGoodsComponent {
   private loadData(){
     let x=this.goodsService.loadData();
 
-    this.goodsService.loadData().subscribe((data)=>{
-      this.goods=[];
-      for (let x in data){
-        this.goods.push({...data[x], id:x });
+    let obs=this.goodsService.loadData();
+    
+    //Kai turime tik vieną f-ją kurią norime kad iškviestų po duomenų gavimo
+    /*
+    obs.subscribe( (data)=>{
+      console.log("duomenys gauti paprastai")
+    });
+
+    obs.subscribe({
+      next:(data)=>{
+        console.log("duomenys gauti is next")
+      },
+      error:(err)=>{
+        console.log("Ivyko klaida")
+      },
+      complete:()=>{
+        console.log("Observable baige darba");
       }
-      console.log(this.goods);
+
+    });
+*/
+
+
+  
+    this.isLoading=true;
+    this.isError=false;
+    obs.subscribe({
+      next:(data)=>{
+        this.goods=data;
+        this.isLoading=false;
+        this.isError=false;
+      },
+      error:(error)=>{
+        this.isError=true;
+        this.isLoading=false;
+      }
+      
     });
   }
 
 
   public deleteRecord(id:string|null){
     if (id!=null){
+      this.isLoading=true;
       this.goodsService.deleteRecord(id).subscribe(()=>{
+        
         this.loadData();
+        
+
       });
     }
   }

@@ -3,11 +3,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GoodsService } from '../../services/goods.service';
 import { Good } from '../../models/good';
 import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { LoadingComponent } from '../loading/loading.component';
 
 @Component({
   selector: 'app-edit-product',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, CommonModule, LoadingComponent],
   templateUrl: './edit-product.component.html',
   styleUrl: './edit-product.component.css'
 })
@@ -16,6 +18,7 @@ export class EditProductComponent {
   public description:string|null=null;
   public recipient:string|null=null;
   public status:string|null=null;
+  public isLoading=false;
 
   constructor(private route:ActivatedRoute, private router:Router, private goodsService:GoodsService){
     //Paimame aktyvaus kelio, parametrą id
@@ -40,8 +43,10 @@ export class EditProductComponent {
         status:this.status
       }
       //Iškviečiame goodsService metodą kuris atnaujins įreašą
+      this.isLoading=true;
       this.goodsService.updateRecord(record).subscribe(()=>{
         // Po išsaugojimo vartotoją nukreipiame į sąrašą
+        this.isLoading=false;
         this.router.navigate(['list']);
 
       });
