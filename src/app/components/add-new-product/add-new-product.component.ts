@@ -3,13 +3,14 @@ import { GoodsService } from '../../services/goods.service';
 import { FormsModule } from '@angular/forms';
 import { LoadingComponent } from '../loading/loading.component';
 import { CommonModule } from '@angular/common';
+import { ErrorComponent } from '../error/error.component';
 
 
 
 @Component({
   selector: 'app-add-new-product',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoadingComponent],
+  imports: [CommonModule, FormsModule, LoadingComponent, ErrorComponent],
   templateUrl: './add-new-product.component.html',
   styleUrl: './add-new-product.component.css'
 })
@@ -18,6 +19,7 @@ export class AddNewProductComponent {
   public description:string|null=null;
   public status:string|null=null;
   public isLoading=false;
+  public isError=false;
   
   public constructor(private goodsService:GoodsService){
     
@@ -31,12 +33,23 @@ export class AddNewProductComponent {
         description:this.description,
         status:this.status,
         id:null,
-      }).subscribe(()=>{
-        this.recipient=null;
-        this.description=null;
-        this.status=null;
-        this.isLoading=false;
-      });
+      }).subscribe({
+        next:()=>{
+          this.recipient=null;
+          this.description=null;
+          this.status=null;
+          this.isLoading=false;
+          this.isError=false;
+          
+        },
+        error:()=>{
+          this.isError=true;
+          this.isLoading=false;
+        }
+      }
+        
+        
+        );
     }
   }
 

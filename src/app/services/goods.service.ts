@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
+import { EventEmitter, Injectable } from '@angular/core';
 import { Good } from '../models/good';
 import { HttpClient } from '@angular/common/http';
-import { delay, map, tap } from 'rxjs';
+import { catchError, delay, map, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -10,13 +10,17 @@ export class GoodsService {
 
   public goods:Good[]=[];
 
+  public onGoodsCountChange=new EventEmitter();
+
   constructor(private http:HttpClient) { }
 
    
 
   public addGood(item:Good){
     this.goods.push(item);
-    return this.http.post("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods.json",item);
+    return this.http.post("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods.json",item).pipe(
+      tap(()=>this.onGoodsCountChange.emit())
+    );
   }
 
   public loadData(){
@@ -30,6 +34,7 @@ export class GoodsService {
               goods.push({...data[x], id:x });
             }
             this.goods=goods;
+            
             return goods;
           } ))
           /*
@@ -41,10 +46,9 @@ export class GoodsService {
           })
         )
         */
-      .pipe(
+      /*.pipe(
         delay(1000)
-
-      )  ;
+      )*/ ;
   }
 
   public loadRecord(id:String){
@@ -58,6 +62,8 @@ export class GoodsService {
   }
 
   public deleteRecord(id:string){
-    return this.http.delete("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods/"+id+".json"); 
+    return this.http.delete("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods/"+id+".json").pipe(
+      tap(()=>this.onGoodsCountChange.emit())
+    );
   }
 }
