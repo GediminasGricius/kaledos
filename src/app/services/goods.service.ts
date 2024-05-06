@@ -2,6 +2,7 @@ import { EventEmitter, Injectable } from '@angular/core';
 import { Good } from '../models/good';
 import { HttpClient } from '@angular/common/http';
 import { catchError, delay, map, tap } from 'rxjs';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root',
@@ -11,14 +12,15 @@ export class GoodsService {
   public goods:Good[]=[];
 
   public onGoodsCountChange=new EventEmitter();
+  public onStatusChange=new EventEmitter<Number>();
 
-  constructor(private http:HttpClient) { }
+  constructor(private http:HttpClient, private authService:AuthService) { }
 
    
 
   public addGood(item:Good){
     this.goods.push(item);
-    return this.http.post("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods.json",item).pipe(
+    return this.http.post("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods.json?auth="+this.authService.auth?.idToken,item).pipe(
       tap(()=>this.onGoodsCountChange.emit())
     );
   }
@@ -26,7 +28,7 @@ export class GoodsService {
   public loadData(){
     // Gauname observable
     return this.http
-      .get<{[key:string]:Good}>("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods.json")
+      .get<{[key:string]:Good}>("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods.json?auth="+this.authService.auth?.idToken)
       .pipe( 
           map( (data):Good[]=>{
             let goods=[];
@@ -34,9 +36,16 @@ export class GoodsService {
               goods.push({...data[x], id:x });
             }
             this.goods=goods;
+            this.onStatusChange.emit(0);
             
             return goods;
           } ))
+      .pipe(
+        catchError( (er,c)=>{ 
+          this.onStatusChange.emit(1);
+          throw "Klaida";
+        })
+      )   
           /*
       .pipe(
           tap((data)=>{
@@ -52,17 +61,17 @@ export class GoodsService {
   }
 
   public loadRecord(id:String){
-    return this.http.get<Good>("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods/"+id+".json");
+    return this.http.get<Good>("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods/"+id+".json?auth="+this.authService.auth?.idToken);
   }
   
 
   public updateRecord(item:Good ){
-    return this.http.patch("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods/"+item.id+".json", item);
+    return this.http.patch("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods/"+item.id+".json?auth="+this.authService.auth?.idToken, item);
 
   }
 
   public deleteRecord(id:string){
-    return this.http.delete("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods/"+id+".json").pipe(
+    return this.http.delete("https://kaledos-7fc07-default-rtdb.europe-west1.firebasedatabase.app/goods/"+id+".json?auth="+this.authService.auth?.idToken).pipe(
       tap(()=>this.onGoodsCountChange.emit())
     );
   }
