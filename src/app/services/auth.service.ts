@@ -17,6 +17,7 @@ export class AuthService {
 
   }
 
+  //Prisijungimas kai prisijungiame įvedę el. paštą ir slaptažodį 
   public register(email:string, password:string, newUser:boolean){
     const method=(newUser)?'signUp':'signInWithPassword';
     
@@ -27,13 +28,30 @@ export class AuthService {
     }).pipe(tap( (response)=>{
       this.auth=response;
       this.isLoggedin=true;
+      //Išsaugome duomenis prisijungimo
+      localStorage.setItem("user", JSON.stringify(this.auth));
       this.onUserStatusChange.emit(true);
     }));
   }
 
+  // Prisijungimas panaudojant duomenis iš localstorage
+  public autoLogin(){
+    let user=localStorage.getItem("user");
+    //patikriname ar esame prisijungę
+    if (user!=null){
+        this.auth= JSON.parse(user);
+        this.isLoggedin=true;
+        this.onUserStatusChange.emit(true);
+    }
+
+  }
+
+  //Atsijungiame paspaudę mygtuką atsijungti
   public logout(){
     this.isLoggedin=false;
     this.auth=null;
+    //Ištriname prisijungimo duomenis
+    localStorage.removeItem("user");
     this.onUserStatusChange.emit(false);
     this.router.navigate(['/']);
   }
